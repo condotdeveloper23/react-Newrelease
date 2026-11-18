@@ -1,0 +1,32 @@
+:root {
+  --brand: #ed3237;        /* main color (buttons, highlights) */
+  --sidebar-bg: #343a40;   /* sidebar + footer background */
+  --sidebar-active:rgb(167, 12, 12);;
+}
+
+.site-title {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .site-title {
+    font-size: 1.75rem;
+  }
+}
+
+
+/* ===== Common table header (sab tables ke liye) ===== */
+table.dataTable thead th,
+table.dataTable thead td {
+  background-color: var(--brand) !important;
+  color: #fff !important;
+  padding: 5px 10px;
+  border-bottom: 1px solid #fff;
+  position: sticky;
+  top: 0;
+}
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
+table.dataTable thead .sorting_desc {
+  background-image: none !important;
+}
