@@ -19,7 +19,7 @@ export default function UserList() {
         try {
             setLoading(true);
 
-            const response = await api.get("/user/dataUsers");
+            const response = await api.get("/spa/user/dataUsers");
 
             setUsers(response.data.data || []);
         } catch (error) {
@@ -98,7 +98,7 @@ export default function UserList() {
     // Open edit modal
     const handleEdit = useCallback(async (id) => {
         try {
-            const response = await api.get(`/user/edit/${id}`);
+            const response = await api.get(`/spa/user/edit/${id}`);
 
             setSelectedUser(response.data);
             setIsActive(Number(response.data.is_active) === 1);
@@ -143,7 +143,7 @@ export default function UserList() {
             formData.append("id", selectedUser.id);
             formData.append("is_active", isActive ? "on" : "off");
 
-            await api.post("/user/update", formData);
+            await api.post("/spa/user/update", formData);
 
             setShowModal(false);
             setSelectedUser(null);

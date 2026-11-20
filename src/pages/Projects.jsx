@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import $ from "jquery"; // needed for $.fn.dataTable.render below
+import api from "../api/axios"; // shared instance (cookies + 401 -> SSO)
 import DataTable from "../components/DataTable";
-
-// ---------- API setup (replaces $.ajax + CSRF header) ----------
-const api = axios.create({
-  headers: {
-    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content,
-    Accept: "application/json",
-  },
-});
 
 const showSuccess = (text) =>
   Swal.fire({
@@ -21,12 +14,10 @@ const showSuccess = (text) =>
     confirmButtonText: "Ok",
   });
 
-// IMPORTANT: defined OUTSIDE the component so the array reference stays stable.
-// DataTable's useEffect depends on [rows, columns]; a new array on every render
-// would destroy and rebuild the table each time.
+// Defined OUTSIDE the component so the reference stays stable
 const columns = [
   { title: "ID", data: "customId" },
-  { title: "Project", data: "name", render: $.fn.dataTable.render.text() }, // escapes HTML (XSS safe)
+  { title: "Project", data: "name", render: $.fn.dataTable.render.text() },
   { title: "Created At", data: "created_at" },
   { title: "Updated At", data: "updated_at" },
   {
@@ -34,32 +25,16 @@ const columns = [
     data: "id",
     orderable: false,
     searchable: false,
-    // DataTable listens for clicks on .edit-icon and reads data-id
     render: (id) =>
-      `<i class="fas fa-edit edit-icon text-danger" data-id="${id}" style="cursor:pointer;"></i>`,
+      `<i class="fas fa-edit edit-icon text-danger" data-id="${Number(id)}" style="cursor:pointer;"></i>`,
   },
 ];
 
-// ---------- Reusable modal (used for both Add and Edit) ----------
-// Everything it needs comes from props. It owns no data of its own.
-function ProjectModal({
-  show,
-  title,
-  submitLabel,
-  value,
-  error,
-  onChange,
-  onSubmit,
-  onClose,
-}) {
-  if (!show) return null; // Conditional rendering replaces modal('show') / modal('hide')
+function ProjectModal({ show, title, submitLabel, value, error, saving, onChange, onSubmit, onClose }) {
+  if (!show) return null;
 
   return (
-    <div
-      className="modal fade show d-block"
-      style={{ background: "rgba(0,0,0,0.5)" }}
-      tabIndex="-1"
-    >
+    <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.5)" }} tabIndex="-1">
       <div className="modal-dialog">
         <div className="modal-content">
           <form onSubmit={onSubmit}>
@@ -81,21 +56,17 @@ function ProjectModal({
                   className="form-control"
                   id="project_name"
                   value={value}
-                  onChange={(e) => onChange(e.target.value)} // Controlled input
+                  onChange={(e) => onChange(e.target.value)}
                   required
                 />
               </div>
 
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={onClose}
-                >
+                <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
                   Close
                 </button>
-                <button type="submit" className="btn btn-danger shadow">
-                  {submitLabel}
+                <button type="submit" className="btn btn-danger shadow" disabled={saving}>
+                  {saving ? "Please wait..." : submitLabel}
                 </button>
               </div>
             </div>
@@ -106,11 +77,11 @@ function ProjectModal({
   );
 }
 
-// ---------- Page (parent) ----------
-// Holds the shared state and passes it down to children as props.
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -121,29 +92,30 @@ export default function Projects() {
   const [editName, setEditName] = useState("");
   const [editError, setEditError] = useState("");
 
-  // Fetch list (replaces fetchProductData). useCallback keeps the same
-  // function reference between renders so useEffect does not re-run.
   const fetchProjects = useCallback(async () => {
     try {
-      const { data } = await api.get("/projects/data"); // same as route('projects.data')
-      setProjects(
-        data.data.map((item, index) => ({ ...item, customId: index + 1 }))
+      setLoadError("");
+      const { data } = await api.get("/spa/projects/data");
+      setProjects((data.data || []).map((item, index) => ({ ...item, customId: index + 1 })));
+    } catch (err) {
+      setLoadError(
+        err.response?.status === 403
+          ? "You do not have access to this page."
+          : "Unable to load projects."
       );
     } finally {
-      setLoading(false); // replaces $('#loader').hide()
+      setLoading(false);
     }
   }, []);
 
-  // Runs once after the first render (replaces $(document).ready)
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
-  // Auto-clear error messages (replaces setTimeout + .html(''))
   useEffect(() => {
     if (!addError) return;
     const t = setTimeout(() => setAddError(""), 3000);
-    return () => clearTimeout(t); // cleanup
+    return () => clearTimeout(t);
   }, [addError]);
 
   useEffect(() => {
@@ -154,10 +126,12 @@ export default function Projects() {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (saving) return;
     try {
+      setSaving(true);
       const formData = new FormData();
       formData.append("project_name", newName);
-      await api.post("/project/store", formData);
+      await api.post("/spa/project/store", formData);
 
       setAddOpen(false);
       setNewName("");
@@ -168,37 +142,43 @@ export default function Projects() {
       if (status === 422) setAddError("Please fill all the required details");
       else if (status === 409) setAddError("Project name already exists");
       else setAddError("An error occurred. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Called by DataTable (onAction) with the clicked row's id
   const openEdit = async (id) => {
     try {
-      const { data: record } = await api.get(`/projects/edit/${id}`);
+      const { data: record } = await api.get(`/spa/projects/edit/${id}`);
       setEditId(id);
       setEditName(record.name);
+      setEditError("");
       setEditOpen(true);
     } catch {
-      alert("Error fetching data for editing.");
+      Swal.fire({
+        title: "Error",
+        text: "Error fetching data for editing.",
+        icon: "error",
+        confirmButtonColor: "#ed3237",
+      });
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (saving) return;
     try {
-      await api.post("/project/update", {
-        id: editId,
-        edit_project_name: editName,
-      });
+      setSaving(true);
+      await api.post("/spa/project/update", { id: editId, edit_project_name: editName });
       setEditOpen(false);
       await fetchProjects();
       showSuccess("Project updated successfully!");
     } catch (err) {
       if (err.response?.status === 422)
-        setEditError(
-          "The name is already used by another entry. Please choose a different name"
-        );
+        setEditError("The name is already used by another entry. Please choose a different name");
       else setEditError("An error occurred. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -209,33 +189,23 @@ export default function Projects() {
           <h4 className="dashboard-heading">Projects</h4>
         </div>
         <div className="col-lg-6 dashurl">
-          <a href="/dashboard" className="text-dark">
-            Dashboard
-          </a>
-          <a href="#" className="text-danger">
-            {" "}
-            / Project
-          </a>
+          <Link to="/dashboard" className="text-dark">Dashboard</Link>
+          <span className="text-danger"> / Project</span>
         </div>
       </div>
 
       <div className="row mb-3">
         <div className="col-lg-6"></div>
         <div className="col-lg-6" style={{ textAlign: "right" }}>
-          <button
-            className="btn btn-danger shadow"
-            onClick={() => setAddOpen(true)}
-          >
+          <button className="btn btn-danger shadow" onClick={() => setAddOpen(true)}>
             Add Project
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <DataTable columns={columns} rows={projects} onAction={openEdit} />
-      )}
+      {loading && <p>Loading...</p>}
+      {!loading && loadError && <div className="alert alert-danger">{loadError}</div>}
+      {!loading && !loadError && <DataTable columns={columns} rows={projects} onAction={openEdit} />}
 
       <ProjectModal
         show={addOpen}
@@ -243,6 +213,7 @@ export default function Projects() {
         submitLabel="Submit"
         value={newName}
         error={addError}
+        saving={saving}
         onChange={setNewName}
         onSubmit={handleAdd}
         onClose={() => setAddOpen(false)}
@@ -254,6 +225,7 @@ export default function Projects() {
         submitLabel="Update"
         value={editName}
         error={editError}
+        saving={saving}
         onChange={setEditName}
         onSubmit={handleUpdate}
         onClose={() => setEditOpen(false)}

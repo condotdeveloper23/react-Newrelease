@@ -150,18 +150,17 @@ export default function AuditTrialReport() {
     ], [])
 
     // PDF download
-    const handlePdfDownload = () => {
-        const usersJson = JSON.stringify(selectedUsers)
+const handlePdfDownload = () => {
+    const usersJson = JSON.stringify(selectedUsers)
 
-        const url =
-            `/report/audit_trial_user_report_pdf/` +
-            `${encodeURIComponent(fromDate)}/` +
-            `${encodeURIComponent(toDate)}/` +
-            `${encodeURIComponent(usersJson)}`
+    const url =
+        `/spa/report/audit-trial/pdf/` +
+        `${encodeURIComponent(fromDate)}/` +
+        `${encodeURIComponent(toDate)}/` +
+        `${encodeURIComponent(usersJson)}`
 
-        window.location.href = url
-    }
-
+    window.location.href = url
+}
     return (
         <>
             {/* Page Heading */}
