@@ -45,7 +45,7 @@ export default function UserList() {
         return users.map((user, index) => ({
             ...user,
             custom_id: index + 1,
-            status: Number(user.is_active) === 1 ? "True" : "False",
+            status: Number(user.is_active) === 1 ? "Active" : "Inactive",
         }));
     }, [users]);
 

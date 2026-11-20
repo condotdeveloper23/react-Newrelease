@@ -18,6 +18,10 @@ export default defineConfig({
                   '/user': { target, changeOrigin: true },
       '/report/audit_trial_user_report_pdf': { target, changeOrigin: true },
       '/download': { target, changeOrigin: false },
+      '/projects/data': { target, changeOrigin: true },
+'/projects/edit': { target, changeOrigin: true },
+'/project/store': { target, changeOrigin: true },
+'/project/update': { target, changeOrigin: true },
  
      
     },

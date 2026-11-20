@@ -8,7 +8,7 @@ import AccessRights from "./pages/AccessRights";
 
 import ReportIndex from "./pages/ReportIndex";
 import AuditTrialReport from "./pages/AuditTrialReport";
-
+import Projects from "./pages/Projects";
 // Temporary debug component
 
 
@@ -29,6 +29,7 @@ export default function App() {
         <Route path="/user/access-rights" element={<AccessRights />} />
         <Route path="/report" element={<ReportIndex />} />
         <Route path="/report/audit-trial-report" element={<AuditTrialReport />} />
+        <Route path="/projects" element={<Projects />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
