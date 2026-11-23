@@ -7,6 +7,7 @@ import AccessRights from "./pages/AccessRights";
 import ReportIndex from "./pages/ReportIndex";
 import AuditTrialReport from "./pages/AuditTrialReport";
 import Projects from "./pages/Projects";
+import UserManagement from "./pages/UserManagement"; 
 
 export default function App() {
   return (
@@ -24,7 +25,9 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/user" element={<Navigate to="/user/user" replace />} />
+        {/* <Route path="/user" element={<Navigate to="/user/user" replace />} />
+         */}
+         <Route path="/user" element={<UserManagement />} /> 
         <Route path="/user/user" element={<UserList />} />
         <Route path="/user/access-rights" element={<AccessRights />} />
         <Route path="/report" element={<ReportIndex />} />
