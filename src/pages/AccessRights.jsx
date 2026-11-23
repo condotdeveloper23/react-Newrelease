@@ -1,14 +1,21 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import api from "../api/axios";
+
+const headerStyle = {
+    fontWeight: 700,
+    fontSize: "16px",
+    textAlign: "left",
+    borderBottom: "1px solid #dee2e6",
+};
 
 export default function AccessRights() {
     const [users, setUsers] = useState([]);
     const [menus, setMenus] = useState([]);
     const [userId, setUserId] = useState("");
     const [checkedMenus, setCheckedMenus] = useState([]);
+    const [isAdminUser, setIsAdminUser] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
@@ -18,14 +25,12 @@ export default function AccessRights() {
         const fetchData = async () => {
             try {
                 const response = await api.get("/spa/user/access-rights");
-
                 setUsers(response.data.users || []);
                 setMenus(response.data.menus || []);
             } catch (error) {
                 Swal.fire(
                     "Error",
-                    error.response?.data?.message ||
-                        "Unable to load access rights data.",
+                    error.response?.data?.message || "Unable to load access rights data.",
                     "error"
                 );
             } finally {
@@ -42,22 +47,20 @@ export default function AccessRights() {
 
         setUserId(selectedId);
         setCheckedMenus([]);
+        setIsAdminUser(false);
 
         if (!selectedId) return;
 
         setLoading(true);
 
         try {
-            const response = await api.get(
-                `/spa/user/access-rights/${selectedId}`
-            );
-
-            setCheckedMenus(response.data.assignedMenuIds || []);
+            const response = await api.get(`/spa/user/access-rights/${selectedId}`);
+            setCheckedMenus((response.data.assignedMenuIds || []).map(Number));
+            setIsAdminUser(Boolean(response.data.is_admin));
         } catch (error) {
             Swal.fire(
                 "Error",
-                error.response?.data?.message ||
-                    "Unable to load assigned permissions.",
+                error.response?.data?.message || "Unable to load assigned permissions.",
                 "error"
             );
         } finally {
@@ -65,8 +68,8 @@ export default function AccessRights() {
         }
     };
 
-    // Handle checkbox selection
     const handleCheckboxChange = (menuId) => {
+        if (isAdminUser) return;
         setCheckedMenus((previous) =>
             previous.includes(menuId)
                 ? previous.filter((id) => id !== menuId)
@@ -83,21 +86,19 @@ export default function AccessRights() {
             return;
         }
 
+        if (isAdminUser) return;
+
         setSaving(true);
 
         try {
-            const response = await api.post(
-                "/spa/user/assign-access-rights",
-                {
-                    userId: Number(userId),
-                    projectMenu: checkedMenus,
-                }
-            );
+            const response = await api.post("/spa/user/assign-access-rights", {
+                userId: Number(userId),
+                projectMenu: checkedMenus,
+            });
 
             Swal.fire(
                 "Success",
-                response.data.message ||
-                    "Access rights updated successfully.",
+                response.data.message || "Access rights updated successfully.",
                 "success"
             );
         } catch (error) {
@@ -105,8 +106,7 @@ export default function AccessRights() {
 
             const message = validationErrors
                 ? Object.values(validationErrors).flat().join("\n")
-                : error.response?.data?.message ||
-                    "Unable to update access rights.";
+                : error.response?.data?.message || "Unable to update access rights.";
 
             Swal.fire("Error", message, "error");
         } finally {
@@ -115,155 +115,113 @@ export default function AccessRights() {
     };
 
     if (pageLoading) {
-        return (
-            <div className="text-center p-4">
-                Loading access rights...
-            </div>
-        );
+        return <div className="text-center p-4">Loading access rights...</div>;
     }
+
+    const locked = !userId || loading || saving || isAdminUser;
 
     return (
         <div className="container-fluid">
-
-            {/* Breadcrumb */}
+            {/* Heading + Breadcrumb */}
             <div className="row mb-3">
                 <div className="col-lg-6">
-                    <h4 className="dashboard-heading">
-                        Access Rights
-                    </h4>
+                    <h4 className="dashboard-heading">Application Rights Access</h4>
                 </div>
 
                 <div className="col-lg-6 dashurl text-end">
                     <Link to="/user" className="text-dark">
                         Users
                     </Link>
-                    <span className="text-danger">
-                        {" / Access Rights"}
-                    </span>
+                    <span className="text-danger">{" / Access Rights"}</span>
                 </div>
             </div>
 
-            {/* Access Rights Card */}
+            {/* Select Employee Card */}
             <div className="row">
                 <div className="col-12">
-                    <div className="card p-3 shadow">
+                    <div className="card p-3 shadow mb-4">
+                        <label className="mb-2 fw-bold">Select Employee</label>
 
-                        <label className="mb-2">
-                            User Roles
-                        </label>
+                        <select
+                            className="form-control"
+                            value={userId}
+                            onChange={handleUserChange}
+                        >
+                            <option value="">-- Select Employee --</option>
 
-                        {/* User Dropdown */}
-                        <div className="col-md-12 mb-3">
-                            <select
-                                className="form-control"
-                                value={userId}
-                                onChange={handleUserChange}
-                            >
-                                <option value="">
-                                    -- Select User --
+                            {users.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.name}
                                 </option>
-
-                                {users.map((user) => (
-                                    <option
-                                        key={user.id}
-                                        value={user.id}
-                                    >
-                                        {user.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Menu Permissions */}
-                        <form onSubmit={handleSubmit}>
-                            <div className="table-responsive">
-                                <table className="table table-sm table-bordered">
-                                    <thead>
-                                        <tr
-                                            style={{
-                                                backgroundColor: "#ed3237",
-                                                color: "#ffffff",
-                                            }}
-                                        >
-                                            <th style={{ width: "80%" }}>
-                                                Menu
-                                            </th>
-                                            <th className="text-center">
-                                                Show
-                                            </th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {menus.length > 0 ? (
-                                            menus.map((menu) => (
-                                                <tr key={menu.id}>
-                                                    <td>
-                                                        {menu.menu_name.replace(
-                                                            /_/g,
-                                                            " "
-                                                        )}
-                                                    </td>
-
-                                                    <td className="text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="projectMenuCK"
-                                                            value={menu.id}
-                                                            checked={checkedMenus.includes(
-                                                                Number(menu.id)
-                                                            )}
-                                                            disabled={
-                                                                !userId ||
-                                                                loading ||
-                                                                saving
-                                                            }
-                                                            onChange={() =>
-                                                                handleCheckboxChange(
-                                                                    Number(menu.id)
-                                                                )
-                                                            }
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td
-                                                    colSpan="2"
-                                                    className="text-center"
-                                                >
-                                                    No active menus found.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {loading && (
-                                <div className="text-center mb-3">
-                                    Loading assigned permissions...
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                className="btn btn-danger shadow btn-sm"
-                                disabled={
-                                    !userId ||
-                                    loading ||
-                                    saving
-                                }
-                                style={{ marginBottom: "10px" }}
-                            >
-                                {saving ? "Saving..." : "Assign Rights"}
-                            </button>
-                        </form>
-
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
+
+            {/* Menu list */}
+            <form onSubmit={handleSubmit}>
+                <div className="table-responsive">
+                    <table className="table table-sm mb-3">
+                        <thead>
+                            <tr>
+                                <th style={{ ...headerStyle, width: "65%" }} className="text-start">
+                                    Menu
+                                </th>
+                                <th style={headerStyle} className="text-start">
+                                    Show
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody style={{ fontSize: "13px" }}>
+                            {menus.length > 0 ? (
+                                menus.map((menu) => (
+                                    <tr key={menu.id}>
+                                        <td>{menu.menu_name.replace(/_/g, " ")}</td>
+
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                className="projectMenuCK"
+                                                value={menu.id}
+                                                checked={checkedMenus.includes(Number(menu.id))}
+                                                disabled={locked}
+                                                onChange={() => handleCheckboxChange(Number(menu.id))}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="2" className="text-center">
+                                        No active menus found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {loading && (
+                    <div className="text-center mb-3">Loading assigned permissions...</div>
+                )}
+
+                {isAdminUser && (
+                    <div className="alert alert-info py-2">
+                        Admin access  cannot be changed here.
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    className="btn btn-danger shadow btn-sm"
+                    disabled={locked}
+                    style={{ marginBottom: "10px" }}
+                >
+                    {saving ? "Saving..." : "Assign Rights"}
+                </button>
+            </form>
         </div>
     );
 }

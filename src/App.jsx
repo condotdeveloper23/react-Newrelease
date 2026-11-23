@@ -28,7 +28,7 @@ export default function App() {
         {/* <Route path="/user" element={<Navigate to="/user/user" replace />} />
          */}
          <Route path="/user" element={<UserManagement />} /> 
-        <Route path="/user/user" element={<UserList />} />
+        {/* <Route path="/user/user" element={<UserList />} /> */}
         <Route path="/user/access-rights" element={<AccessRights />} />
         <Route path="/report" element={<ReportIndex />} />
         <Route path="/report/audit-trial-report" element={<AuditTrialReport />} />

@@ -18,14 +18,14 @@ export default function UserManagement() {
       </div>
 
       <div className="row">
-        <div className="col-lg-4 col-md-4 col-sm-12">
+        {/* <div className="col-lg-4 col-md-4 col-sm-12">
           <Link to="/user/user" className="text-dark" style={{ textDecoration: 'none' }}>
             <div className="card border-hover shadow p-4 m-2">
               <h2 className="text-center text-danger">{s.countUser}</h2>
               <h5 className="text-center">Users</h5>
             </div>
           </Link>
-        </div>
+        </div> */}
 
         <div className="col-lg-4 col-md-4 col-sm-12">
           <Link to="/user/access-rights" className="text-dark" style={{ textDecoration: 'none' }}>
