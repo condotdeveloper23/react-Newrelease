@@ -18,7 +18,8 @@ export default function Layout({ data }) {
       label: "Projects",
       show: p.projects,
     },
-    { to: "/report", icon: "fas fa-file-alt", label: "Report", show: true },
+    // { to: "/report", icon: "fas fa-file-alt", label: "Report", show: true },
+    { to: "/report", icon: "fas fa-file-alt", label: "Report", show: p.reports },
   ].filter((m) => m.show);
 
   return (
@@ -74,7 +75,14 @@ export default function Layout({ data }) {
 
         <div className="topbar-right">
           <div className="welcome-message">
-            Welcome, <span className="text-danger">{data?.user?.name}</span>
+            Welcome,{" "}
+            <Link
+              to="/profile"
+              className="text-danger"
+              style={{ textDecoration: "none" }}
+            >
+              {data?.user?.name}
+            </Link>
           </div>
 
           <a href="/global-logout" className="btn btn-link logout-btn">
@@ -87,18 +95,18 @@ export default function Layout({ data }) {
         <Outlet context={data} />
       </div>
 
-<div className="app-footer">
-    <span>
-        CSPL Software Release
-        <small style={{ fontSize: '14px', opacity: 0.7, marginLeft: '24px' }}>
+      <div className="app-footer">
+        <span>
+          CSPL Software Release
+          <small style={{ fontSize: "14px", opacity: 0.7, marginLeft: "24px" }}>
             Version 1.2
-        </small>
-    </span>
+          </small>
+        </span>
 
-    <span>
-        Copyright © {year} Condot Systems Pvt. Ltd. All rights reserved.
-    </span>
-</div>
+        <span>
+          Copyright © {year} Condot Systems Pvt. Ltd. All rights reserved.
+        </span>
+      </div>
     </>
   );
 }

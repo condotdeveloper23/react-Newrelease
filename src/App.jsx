@@ -8,7 +8,7 @@ import ReportIndex from "./pages/ReportIndex";
 import AuditTrialReport from "./pages/AuditTrialReport";
 import Projects from "./pages/Projects";
 import UserManagement from "./pages/UserManagement"; 
-
+import Profile from "./pages/Profile";
 export default function App() {
   return (
     <Routes>
@@ -33,6 +33,7 @@ export default function App() {
         <Route path="/report" element={<ReportIndex />} />
         <Route path="/report/audit-trial-report" element={<AuditTrialReport />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
