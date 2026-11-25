@@ -161,7 +161,7 @@ const handlePdfDownload = () => {
 
     window.location.href = url
 }
-    return (
+        return (
         <>
             {/* Page Heading */}
             <div className="row mb-3">
@@ -186,9 +186,7 @@ const handlePdfDownload = () => {
             <div className="row" style={{ padding: '10px' }}>
                 <div
                     className="col-lg-12 card shadow p-4"
-                    style={{
-                        border: '1px solid #ed3237',
-                    }}
+                    style={{ border: '1px solid #ed3237' }}
                 >
                     <form onSubmit={handleSearch}>
                         <div className="row">
@@ -234,27 +232,16 @@ const handlePdfDownload = () => {
                             <div className="col-md-6">
                                 <div
                                     className="row"
-                                    style={{
-                                        maxHeight: '150px',
-                                        overflowY: 'auto',
-                                    }}
+                                    style={{ maxHeight: '150px', overflowY: 'auto' }}
                                 >
                                     <div className="col-md-12">
                                         <div className="row">
-
-                                            <div
-                                                className="col-2"
-                                                style={{ fontWeight: 'bold' }}
-                                            >
+                                            <div className="col-2" style={{ fontWeight: 'bold' }}>
                                                 Users
                                             </div>
 
-                                            <div
-                                                className="col-10"
-                                                style={{ fontWeight: 'bold' }}
-                                            >
+                                            <div className="col-10" style={{ fontWeight: 'bold' }}>
                                                 All&nbsp;
-
                                                 <input
                                                     type="checkbox"
                                                     checked={allSelected}
@@ -263,7 +250,6 @@ const handlePdfDownload = () => {
                                                     }
                                                 />
                                             </div>
-
                                         </div>
                                     </div>
 
@@ -273,12 +259,8 @@ const handlePdfDownload = () => {
 
                                     <div className="col-md-12">
                                         <div className="row">
-
                                             {users.map(user => (
-                                                <div
-                                                    className="col-md-12"
-                                                    key={user.id}
-                                                >
+                                                <div className="col-md-12" key={user.id}>
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedUsers.includes(
@@ -294,16 +276,11 @@ const handlePdfDownload = () => {
 
                                                     &nbsp;
 
-                                                    <label
-                                                        style={{
-                                                            fontWeight: 100,
-                                                        }}
-                                                    >
+                                                    <label style={{ fontWeight: 100 }}>
                                                         {user.name} - {user.email}
                                                     </label>
                                                 </div>
                                             ))}
-
                                         </div>
                                     </div>
                                 </div>
@@ -324,7 +301,6 @@ const handlePdfDownload = () => {
                         >
                             {searching ? 'Searching...' : 'Search Report'}
                         </button>
-
                     </form>
                 </div>
             </div>
@@ -346,37 +322,16 @@ const handlePdfDownload = () => {
 
                 <div className="col-12">
                     <div className="table-responsive">
-
-                        {auditTrailsCount > 0 ? (
-                            <DataTable
-                                columns={columns}
-                                rows={rows}
-                            />
-                        ) : (
-                            <table className="cell-border w-100">
-                                <thead>
-                                    <tr>
-                                        <td>Sr. No.</td>
-                                        <td>Email</td>
-                                        <td>DateTime</td>
-                                        <td>Reason</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {!loading && (
-                                        <tr>
-                                            <td colSpan="4" className="text-center">
-                                                No records found
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        )}
-
+                        <DataTable
+                            key={rows.length + '-' + auditTrailsCount}
+                            columns={columns}
+                            rows={rows}
+                        />
                     </div>
                 </div>
+
             </div>
         </>
     )
 }
+

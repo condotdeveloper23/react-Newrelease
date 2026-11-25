@@ -20,6 +20,16 @@ const columns = [
   { title: "Project", data: "name", render: $.fn.dataTable.render.text() },
   { title: "Created At", data: "created_at" },
   { title: "Updated At", data: "updated_at" },
+  { title: "Created By", data: "created_by_name", defaultContent: "-" },
+  { title: "Updated By", data: "updated_by_name", defaultContent: "-" },
+  {
+    title: "Status",
+    data: "is_active",
+    render: (v) =>
+      Number(v) === 1
+        ? 'Active'
+        : 'Inactive',
+  },
   {
     title: "",
     data: "id",
@@ -30,11 +40,28 @@ const columns = [
   },
 ];
 
-function ProjectModal({ show, title, submitLabel, value, error, saving, onChange, onSubmit, onClose }) {
+function ProjectModal({
+  show,
+  title,
+  submitLabel,
+  value,
+  error,
+  saving,
+  onChange,
+  onSubmit,
+  onClose,
+  showStatus,
+  active,
+  onActiveChange,
+}) {
   if (!show) return null;
 
   return (
-    <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.5)" }} tabIndex="-1">
+    <div
+      className="modal fade show d-block"
+      style={{ background: "rgba(0,0,0,0.5)" }}
+      tabIndex="-1"
+    >
       <div className="modal-dialog">
         <div className="modal-content">
           <form onSubmit={onSubmit}>
@@ -61,11 +88,35 @@ function ProjectModal({ show, title, submitLabel, value, error, saving, onChange
                 />
               </div>
 
+              {showStatus && (
+                <div className="mb-3 form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="p_active"
+                    checked={active}
+                    onChange={(e) => onActiveChange(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="p_active">
+                    Active
+                  </label>
+                </div>
+              )}
+
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={onClose}
+                  disabled={saving}
+                >
                   Close
                 </button>
-                <button type="submit" className="btn btn-danger shadow" disabled={saving}>
+                <button
+                  type="submit"
+                  className="btn btn-danger shadow"
+                  disabled={saving}
+                >
                   {saving ? "Please wait..." : submitLabel}
                 </button>
               </div>
@@ -90,18 +141,24 @@ export default function Projects() {
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editActive, setEditActive] = useState(true);
   const [editError, setEditError] = useState("");
 
   const fetchProjects = useCallback(async () => {
     try {
       setLoadError("");
       const { data } = await api.get("/spa/projects/data");
-      setProjects((data.data || []).map((item, index) => ({ ...item, customId: index + 1 })));
+      setProjects(
+        (data.data || []).map((item, index) => ({
+          ...item,
+          customId: index + 1,
+        })),
+      );
     } catch (err) {
       setLoadError(
         err.response?.status === 403
           ? "You do not have access to this page."
-          : "Unable to load projects."
+          : "Unable to load projects.",
       );
     } finally {
       setLoading(false);
@@ -152,6 +209,7 @@ export default function Projects() {
       const { data: record } = await api.get(`/spa/projects/edit/${id}`);
       setEditId(id);
       setEditName(record.name);
+      setEditActive(Number(record.is_active) === 1);
       setEditError("");
       setEditOpen(true);
     } catch {
@@ -169,13 +227,19 @@ export default function Projects() {
     if (saving) return;
     try {
       setSaving(true);
-      await api.post("/spa/project/update", { id: editId, edit_project_name: editName });
+      await api.post("/spa/project/update", {
+        id: editId,
+        edit_project_name: editName,
+        is_active: editActive,
+      });
       setEditOpen(false);
       await fetchProjects();
       showSuccess("Project updated successfully!");
     } catch (err) {
       if (err.response?.status === 422)
-        setEditError("The name is already used by another entry. Please choose a different name");
+        setEditError(
+          "The name is already used by another entry. Please choose a different name",
+        );
       else setEditError("An error occurred. Please try again.");
     } finally {
       setSaving(false);
@@ -189,7 +253,9 @@ export default function Projects() {
           <h4 className="dashboard-heading">Projects</h4>
         </div>
         <div className="col-lg-6 dashurl">
-          <Link to="/dashboard" className="text-dark">Dashboard</Link>
+          <Link to="/dashboard" className="text-dark">
+            Dashboard
+          </Link>
           <span className="text-danger"> / Project</span>
         </div>
       </div>
@@ -197,15 +263,22 @@ export default function Projects() {
       <div className="row mb-3">
         <div className="col-lg-6"></div>
         <div className="col-lg-6" style={{ textAlign: "right" }}>
-          <button className="btn btn-danger shadow" onClick={() => setAddOpen(true)}>
+          <button
+            className="btn btn-danger shadow"
+            onClick={() => setAddOpen(true)}
+          >
             Add Project
           </button>
         </div>
       </div>
 
       {loading && <p>Loading...</p>}
-      {!loading && loadError && <div className="alert alert-danger">{loadError}</div>}
-      {!loading && !loadError && <DataTable columns={columns} rows={projects} onAction={openEdit} />}
+      {!loading && loadError && (
+        <div className="alert alert-danger">{loadError}</div>
+      )}
+      {!loading && !loadError && (
+        <DataTable columns={columns} rows={projects} onAction={openEdit} />
+      )}
 
       <ProjectModal
         show={addOpen}
@@ -217,6 +290,7 @@ export default function Projects() {
         onChange={setNewName}
         onSubmit={handleAdd}
         onClose={() => setAddOpen(false)}
+          showStatus={false}
       />
 
       <ProjectModal
@@ -229,6 +303,10 @@ export default function Projects() {
         onChange={setEditName}
         onSubmit={handleUpdate}
         onClose={() => setEditOpen(false)}
+        showStatus={true}
+        active={editActive}
+        onActiveChange={setEditActive}
+
       />
     </>
   );

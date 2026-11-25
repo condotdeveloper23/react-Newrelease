@@ -136,7 +136,7 @@ export default function AccessRights() {
       {/* Heading + Breadcrumb */}
       <div className="row mb-3">
         <div className="col-lg-6">
-          <h4 className="dashboard-heading">Application Rights Access</h4>
+          <h4 className="dashboard-heading">Access Rights </h4>
         </div>
 
         <div className="col-lg-6 dashurl text-end">
