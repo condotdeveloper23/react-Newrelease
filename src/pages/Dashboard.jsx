@@ -33,6 +33,7 @@ export default function Dashboard() {
 
   const reqId = useRef(0); // ignore stale responses
   const cache = useRef(new Map()); // path -> content
+  const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     api
@@ -97,6 +98,33 @@ export default function Dashboard() {
   const refresh = () => {
     const cur = stack[stack.length - 1];
     if (cur) load(cur.path, stack, { force: true });
+  };
+
+  const downloadZip = async () => {
+    const cur = stack[stack.length - 1];
+    if (!cur || zipping) return;
+
+    setZipping(true);
+    try {
+      const res = await api.get("/spa/download-zip", {
+        params: { folder_name: cur.path },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], { type: "application/zip" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cur.label}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert("Failed to download ZIP. Please try again.");
+    } finally {
+      setZipping(false);
+    }
   };
 
   const q = query.trim().toLowerCase();
@@ -181,14 +209,26 @@ export default function Dashboard() {
             <i className="fas fa-sync-alt" /> Refresh
           </button>
           {totalItems > 0 && (
-            <a
+            <button
               className="btn btn-danger btn-sm"
-              href={fileUrl(
-                `/spa/download-zip?folder_name=${encodeURIComponent(stack[stack.length - 1].path)}`,
-              )}
+              onClick={downloadZip}
+              disabled={zipping}
             >
-              <i className="fas fa-file-archive" /> Download ZIP
-            </a>
+              {zipping ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-1"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  Preparing ZIP...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-archive" /> Download ZIP
+                </>
+              )}
+            </button>
           )}
         </div>
       )}
