@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Outlet, Link, NavLink } from "react-router-dom";
 
+import usePasswordAlert from "../hooks/usePasswordAlert";
+
 const year = new Date().getFullYear();
 
 export default function Layout({ data }) {
   const [open, setOpen] = useState(false);
+  usePasswordAlert(data?.password_alert, data?.sso_password_url);
 
   const p = data?.permissions || {};
   const close = () => setOpen(false);
@@ -19,7 +22,12 @@ export default function Layout({ data }) {
       show: p.projects,
     },
     // { to: "/report", icon: "fas fa-file-alt", label: "Report", show: true },
-    { to: "/report", icon: "fas fa-file-alt", label: "Report", show: p.reports },
+    {
+      to: "/report",
+      icon: "fas fa-file-alt",
+      label: "Report",
+      show: p.reports,
+    },
   ].filter((m) => m.show);
 
   return (
@@ -85,7 +93,15 @@ export default function Layout({ data }) {
             </Link>
           </div>
 
-          <a href="/global-logout" className="btn btn-link logout-btn">
+          {/* <a href="/global-logout" className="btn btn-link logout-btn">
+            <i className="fa fa-sign-out-alt fa-2x" />
+          </a> */}
+
+          <a
+            href="/global-logout"
+            className="btn btn-link logout-btn"
+            onClick={() => sessionStorage.removeItem("pwdAlertShown")}
+          >
             <i className="fa fa-sign-out-alt fa-2x" />
           </a>
         </div>
