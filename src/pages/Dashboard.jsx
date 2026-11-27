@@ -208,7 +208,7 @@ export default function Dashboard() {
           >
             <i className="fas fa-sync-alt" /> Refresh
           </button>
-          {totalItems > 0 && (
+          {/* {totalItems > 0 && (
             <button
               className="btn btn-danger btn-sm"
               onClick={downloadZip}
@@ -229,7 +229,7 @@ export default function Dashboard() {
                 </>
               )}
             </button>
-          )}
+          )} */}
         </div>
       )}
 

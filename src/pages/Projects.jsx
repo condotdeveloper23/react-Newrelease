@@ -5,6 +5,8 @@ import $ from "jquery"; // needed for $.fn.dataTable.render below
 import api from "../api/axios"; // shared instance (cookies + 401 -> SSO)
 import DataTable from "../components/DataTable";
 
+const MAX_NAME_LENGTH = 50;
+
 const showSuccess = (text) =>
   Swal.fire({
     title: "Success",
@@ -84,8 +86,12 @@ function ProjectModal({
                   id="project_name"
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
+                  
                   required
                 />
+                <div className="form-text text-end">
+                  {value.length}/{MAX_NAME_LENGTH}
+                </div>
               </div>
 
               {showStatus && (
@@ -184,10 +190,21 @@ export default function Projects() {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (saving) return;
+
+    const name = newName.trim();
+    if (!name) {
+      setAddError("Please fill all the required details");
+      return;
+    }
+    if (name.length > MAX_NAME_LENGTH) {
+      setAddError(`Project name cannot exceed ${MAX_NAME_LENGTH} characters`);
+      return;
+    }
+
     try {
       setSaving(true);
       const formData = new FormData();
-      formData.append("project_name", newName);
+      formData.append("project_name", name);
       await api.post("/spa/project/store", formData);
 
       setAddOpen(false);
@@ -204,6 +221,25 @@ export default function Projects() {
     }
   };
 
+
+
+    const handleNewNameChange = (val) => {
+    if (val.length > MAX_NAME_LENGTH) {
+      setAddError(`Project name cannot exceed ${MAX_NAME_LENGTH} characters`);
+      setNewName(val.slice(0, MAX_NAME_LENGTH));
+      return;
+    }
+    setNewName(val);
+  };
+
+  const handleEditNameChange = (val) => {
+    if (val.length > MAX_NAME_LENGTH) {
+      setEditError(`Project name cannot exceed ${MAX_NAME_LENGTH} characters`);
+      setEditName(val.slice(0, MAX_NAME_LENGTH));
+      return;
+    }
+    setEditName(val);
+  };
   const openEdit = async (id) => {
     try {
       const { data: record } = await api.get(`/spa/projects/edit/${id}`);
@@ -225,11 +261,22 @@ export default function Projects() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (saving) return;
+
+    const name = editName.trim();
+    if (!name) {
+      setEditError("Please fill all the required details");
+      return;
+    }
+    if (name.length > MAX_NAME_LENGTH) {
+      setEditError(`Project name cannot exceed ${MAX_NAME_LENGTH} characters`);
+      return;
+    }
+
     try {
       setSaving(true);
       await api.post("/spa/project/update", {
         id: editId,
-        edit_project_name: editName,
+        edit_project_name: name,
         is_active: editActive,
       });
       setEditOpen(false);
@@ -287,10 +334,11 @@ export default function Projects() {
         value={newName}
         error={addError}
         saving={saving}
-        onChange={setNewName}
+        // onChange={setNewName}
         onSubmit={handleAdd}
         onClose={() => setAddOpen(false)}
-          showStatus={false}
+        showStatus={false}
+        onChange={handleNewNameChange}
       />
 
       <ProjectModal
@@ -300,13 +348,13 @@ export default function Projects() {
         value={editName}
         error={editError}
         saving={saving}
-        onChange={setEditName}
+        // onChange={setEditName}
         onSubmit={handleUpdate}
         onClose={() => setEditOpen(false)}
         showStatus={true}
         active={editActive}
         onActiveChange={setEditActive}
-
+        onChange={handleEditNameChange}
       />
     </>
   );

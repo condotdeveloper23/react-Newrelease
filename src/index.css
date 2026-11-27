@@ -30,3 +30,8 @@ table.dataTable thead .sorting_asc,
 table.dataTable thead .sorting_desc {
   background-image: none !important;
 }
+.spa-drawer .nav.nav-pills .nav-link.active {
+  background-color: #b71c21 !important;
+  color: #fff !important;
+  /* margin-top: 4px !important; */
+}

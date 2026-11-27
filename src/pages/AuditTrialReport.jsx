@@ -253,7 +253,7 @@ export default function AuditTrialReport() {
               </div>
 
               {/* Users */}
-              <div className="col-md-6">
+              {/* <div className="col-md-6">
                 <div
                   className="row"
                   style={{ maxHeight: "150px", overflowY: "auto" }}
@@ -299,7 +299,57 @@ export default function AuditTrialReport() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
+
+
+
+              {/* Users */}
+<div className="col-md-6">
+  <div className="d-flex align-items-center justify-content-between mb-2">
+    <span style={{ fontWeight: "bold" }}>Users</span>
+
+    <div className="form-check mb-0">
+      <input
+        type="checkbox"
+        className="form-check-input"
+        id="selectAllUsers"
+        checked={allSelected}
+        onChange={(e) => handleSelectAll(e.target.checked)}
+      />
+      <label
+        className="form-check-label"
+        htmlFor="selectAllUsers"
+        style={{ fontWeight: "bold" }}
+      >
+        All
+      </label>
+    </div>
+  </div>
+
+  <div className="user-list">
+    {users.map((user) => (
+      <div className="form-check" key={user.id}>
+        <input
+          type="checkbox"
+          className="form-check-input"
+          id={`user-${user.id}`}
+          checked={selectedUsers.includes(String(user.id))}
+          onChange={(e) => handleUserChange(user.id, e.target.checked)}
+        />
+        <label
+          className="form-check-label"
+          htmlFor={`user-${user.id}`}
+          style={{ fontWeight: 400, wordBreak: "break-word" }}
+        >
+          {user.name} - {user.email}
+        </label>
+      </div>
+    ))}
+  </div>
+</div>
+
+
+
             </div>
 
             {error && <div className="alert alert-danger mt-2">{error}</div>}

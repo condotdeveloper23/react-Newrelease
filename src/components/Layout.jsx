@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, Link, NavLink } from "react-router-dom";
+import api from "../api/axios";
 
 import usePasswordAlert from "../hooks/usePasswordAlert";
 
@@ -13,7 +14,7 @@ export default function Layout({ data }) {
   const close = () => setOpen(false);
 
   const menu = [
-    { to: "/dashboard", icon: "fas fa-home", label: "Dashboard", show: true },
+    { to: "/dashboard", icon: "fas fa-download", label: "Download", show: true },
     { to: "/user", icon: "fa-solid fa-user", label: "Users", show: p.users },
     {
       to: "/projects",
@@ -21,7 +22,6 @@ export default function Layout({ data }) {
       label: "Projects",
       show: p.projects,
     },
-    // { to: "/report", icon: "fas fa-file-alt", label: "Report", show: true },
     {
       to: "/report",
       icon: "fas fa-file-alt",
@@ -29,6 +29,24 @@ export default function Layout({ data }) {
       show: p.reports,
     },
   ].filter((m) => m.show);
+
+const handleLogout = async (e) => {
+  e.preventDefault();
+  sessionStorage.removeItem("pwdAlertShown");
+
+  try {
+    const { data } = await api.post("/spa/logout");
+    window.location.href = data.redirect;
+  } catch {
+    // session already gone: send to SSO login
+    try {
+      const { data } = await api.get("/spa/login-url");
+      window.location.href = data.url;
+    } catch {
+      window.location.reload();
+    }
+  }
+};
 
   return (
     <>
@@ -93,14 +111,10 @@ export default function Layout({ data }) {
             </Link>
           </div>
 
-          {/* <a href="/global-logout" className="btn btn-link logout-btn">
-            <i className="fa fa-sign-out-alt fa-2x" />
-          </a> */}
-
           <a
-            href="/global-logout"
+            href="#"
             className="btn btn-link logout-btn"
-            onClick={() => sessionStorage.removeItem("pwdAlertShown")}
+            onClick={handleLogout}
           >
             <i className="fa fa-sign-out-alt fa-2x" />
           </a>
